@@ -141,4 +141,4 @@ local SpeedInput = TestTab:CreateInput({
       end
    end,
 })
--- loadstring(game:HttpGet("https://raw.githubusercontent.com/htdjuliobrito-design/asda/refs/heads/main/script/lua"))()
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/htdjuliobrito-design/asda/refs/heads/main/script.lua"))()
