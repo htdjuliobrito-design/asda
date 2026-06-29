@@ -1,0 +1,144 @@
+-- Wait for the game to load
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+
+-- Configurations
+local isForcingSpeed = false
+local TARGET_SPEED = 26      
+local DEFAULT_SPEED = 16
+
+-- State variable for your custom script
+local customScriptActive = false
+local customScriptThread = nil
+
+-- ==========================================
+-- LOAD RAYFIELD UI LIBRARY
+-- ==========================================
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Speed Controller",
+   LoadingTitle = "Loading Systems...",
+   LoadingSubtitle = "by htdjuliobrito",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   Discord = {
+      Enabled = false
+   },
+   KeySystem = false
+})
+
+-- ==========================================
+-- CREATE TABS
+-- ==========================================
+-- Main Tab renamed to "Speed" with the custom cat ID
+local MainTab = Window:CreateTab("Speed", "cat") 
+
+-- View Tab remains the same
+local ViewTab = Window:CreateTab("View", "eye") 
+
+-- Test Tab renamed to "Config" with the settings wheel ID
+local TestTab = Window:CreateTab("Config", "settings") 
+
+-- ==========================================
+-- ADVANCED MOVE-VECTOR SPEED LOOP
+-- ==========================================
+RunService.Heartbeat:Connect(function(deltaTime)
+   if isForcingSpeed and player.Character then
+      local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+      local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+      
+      if rootPart and humanoid and humanoid.MoveDirection.Magnitude > 0 then
+         local currentNormalSpeed = humanoid.WalkSpeed
+         if currentNormalSpeed == 0 then currentNormalSpeed = DEFAULT_SPEED end
+         
+         local speedMultiplier = TARGET_SPEED - currentNormalSpeed
+         if speedMultiplier > 0 then
+            rootPart.CFrame = rootPart.CFrame + (humanoid.MoveDirection * (speedMultiplier * deltaTime))
+         end
+      end
+   end
+end)
+
+-- ==========================================
+-- SPEED TAB ELEMENTS
+-- ==========================================
+
+-- The Toggle Switch
+local SpeedToggle = MainTab:CreateToggle({
+   Name = "Force Run",
+   CurrentValue = false,
+   Flag = "SpeedToggleFlag", 
+   Callback = function(Value)
+      isForcingSpeed = Value
+   end,
+})
+
+-- Native Rayfield Keybind Link
+local KeybindSelector = MainTab:CreateKeybind({
+   Name = "Change Toggle Keybind",
+   CurrentKeybind = "F",
+   HoldToInteract = false,
+   Flag = "KeybindFlag",
+   Callback = function()
+      local nextState = not isForcingSpeed
+      SpeedToggle:Set(nextState)
+   end,
+})
+
+-- ==========================================
+-- VIEW TAB ELEMENTS (Your Script Toggle)
+-- ==========================================
+local CustomScriptToggle = ViewTab:CreateToggle({
+   Name = "Run Custom Script",
+   CurrentValue = false,
+   Flag = "CustomScriptFlag",
+   Callback = function(Value)
+      customScriptActive = Value
+      
+      if customScriptActive then
+         customScriptThread = task.spawn(function()
+            local success, err = pcall(function()
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/xt-el/ESP-Players/refs/heads/main/ESP"))()
+            end)
+            
+            if not success then
+               warn("Error running custom script: ", err)
+            end
+         end)
+      else
+         if customScriptThread then
+            task.cancel(customScriptThread)
+            customScriptThread = nil
+         end
+      end
+   end,
+})
+
+-- ==========================================
+-- CONFIG TAB ELEMENTS (Speed Number Changer Box)
+-- ==========================================
+local SpeedInput = TestTab:CreateInput({
+   Name = "Custom Speed Value",
+   PlaceholderText = "Type speed (e.g. 50)",
+   RemoveTextAfterFocusLost = false,
+   Callback = function(Text)
+      local typedNumber = tonumber(Text)
+      
+      if typedNumber then
+         if typedNumber < 16 then typedNumber = 16 end
+         if typedNumber > 500 then typedNumber = 500 end
+         
+         TARGET_SPEED = typedNumber
+      end
+   end,
+})
+-- loadstring(game:HttpGet("https://raw.githubusercontent.com/htdjuliobrito-design/asda/refs/heads/main/script/lua"))()
